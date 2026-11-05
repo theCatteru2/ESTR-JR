@@ -1881,9 +1881,11 @@
                     : 'px-3.5 py-1.5 rounded-xl font-bold font-mono text-xs bg-accent-emerald text-obsidian-950';
             }
 
-            ['nav-btn-predictions', 'mob-nav-pred', 'mobile-more-predictions',
-             'dash-prediction-reserve-card', 'dash-predictions-featured',
-             'portfolio-predictions-section'].forEach(id => {
+            // Ocultar todas las entradas visibles a Predicciones para usuarios normales.
+            // La pestaña completa también queda bloqueada desde switchTab().
+            ['tab-predictions', 'nav-btn-predictions', 'mob-nav-pred',
+             'mobile-more-predictions', 'dash-prediction-reserve-card',
+             'dash-predictions-featured', 'portfolio-predictions-section'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', hideForViewer);
             });
@@ -1897,6 +1899,8 @@
                 if (dashboardMarkets) dashboardMarkets.innerHTML = '';
                 const predictionGrid = document.getElementById('prediction-markets-grid');
                 if (predictionGrid) predictionGrid.innerHTML = '';
+                const predictionReserve = document.getElementById('dash-pred-reserves');
+                if (predictionReserve) predictionReserve.textContent = '—';
             }
         }
 
@@ -2374,16 +2378,26 @@
             if (!parent) return;
             parent.style.position = 'relative';
             canvas.style.touchAction = 'pan-y';
+
             let tooltip = parent.querySelector('.jr-chart-tooltip');
             if (!tooltip) {
                 tooltip = document.createElement('div');
                 tooltip.className = 'jr-chart-tooltip';
-                tooltip.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;display:none;padding:7px 9px;border:1px solid #334155;border-radius:8px;background:rgba(7,12,22,.94);color:#e5e7eb;font:11px monospace;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.25);white-space:nowrap;';
+                tooltip.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;display:none;padding:7px 9px;border:1px solid #334155;border-radius:8px;background:rgba(7,12,22,.96);color:#e5e7eb;font:11px monospace;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.25);white-space:nowrap;';
                 parent.appendChild(tooltip);
             }
+            let crosshair = parent.querySelector('.jr-chart-crosshair');
+            if (!crosshair) {
+                crosshair = document.createElement('div');
+                crosshair.className = 'jr-chart-crosshair';
+                crosshair.style.cssText = 'position:absolute;top:0;bottom:0;width:1px;background:rgba(56,189,248,.8);box-shadow:0 0 5px rgba(56,189,248,.45);display:none;pointer-events:none;z-index:4;';
+                parent.appendChild(crosshair);
+            }
+
             if (canvas.__jrChartPointerHandler) canvas.removeEventListener('pointermove', canvas.__jrChartPointerHandler);
             if (canvas.__jrChartLeaveHandler) canvas.removeEventListener('pointerleave', canvas.__jrChartLeaveHandler);
-            const moveHandler = event => {
+            if (canvas.__jrChartClickHandler) canvas.removeEventListener('click', canvas.__jrChartClickHandler);
+            const showPoint = event => {
                 const rect = canvas.getBoundingClientRect();
                 if (rect.width <= 0) return;
                 const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
@@ -2392,17 +2406,32 @@
                 const timestamp = Number(point.t);
                 const dateText = Number.isFinite(timestamp) && timestamp > 0 ? new Date(timestamp).toLocaleString() : `Punto ${index + 1}`;
                 const value = Number(point.displayValue ?? point.p);
-                tooltip.textContent = `${dateText} · ${valueFormatter(value)}`;
+                tooltip.textContent = `${dateText} · ${valueFormatter(value)} · ${canvas.__jrChartPinned ? 'Fijado (toca para soltar)' : 'Toca para fijar'}`;
                 const parentRect = parent.getBoundingClientRect();
-                const left = Math.max(6, Math.min(parentRect.width - tooltip.offsetWidth - 6, event.clientX - parentRect.left + 10));
+                const x = event.clientX - parentRect.left;
+                const left = Math.max(6, Math.min(parentRect.width - tooltip.offsetWidth - 6, x + 10));
                 tooltip.style.left = `${left}px`;
                 tooltip.style.display = 'block';
+                crosshair.style.left = `${Math.max(0, Math.min(parentRect.width, x))}px`;
+                crosshair.style.display = 'block';
             };
-            const leaveHandler = () => { tooltip.style.display = 'none'; };
+            const moveHandler = event => showPoint(event);
+            const leaveHandler = () => {
+                if (canvas.__jrChartPinned) return;
+                tooltip.style.display = 'none';
+                crosshair.style.display = 'none';
+            };
+            const clickHandler = event => {
+                canvas.__jrChartPinned = !canvas.__jrChartPinned;
+                if (canvas.__jrChartPinned) showPoint(event);
+                else leaveHandler();
+            };
             canvas.__jrChartPointerHandler = moveHandler;
             canvas.__jrChartLeaveHandler = leaveHandler;
+            canvas.__jrChartClickHandler = clickHandler;
             canvas.addEventListener('pointermove', moveHandler, { passive: true });
             canvas.addEventListener('pointerleave', leaveHandler, { passive: true });
+            canvas.addEventListener('click', clickHandler);
         }
 
         // --- 10. PERSISTENT CANVAS CHART ENGINE ---
