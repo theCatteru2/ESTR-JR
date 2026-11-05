@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESTR JRMarket - Terminal Exchange Sintético & DUL Hub</title>
 
-    <!-- Firebase SDK v8 Compat -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- Firebase SDK 10.8.0 Compat: misma versión e infraestructura que el proyecto del ranking -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -102,6 +103,57 @@
         .glass-card { min-width: 0; }
         pre, code, .font-mono { overflow-wrap: anywhere; }
         table { max-width: 100%; }
+        /* Mobile app navigation: independent layout, desktop remains unchanged. */
+        .mobile-bottom-nav, .mobile-more-menu, .mobile-more-backdrop { display: none; }
+        @media (max-width: 767px) {
+            body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+            #app-content { padding-bottom: 0; }
+            .legacy-mobile-nav { display: none !important; }
+            .mobile-bottom-nav {
+                display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+                position: fixed; z-index: 45; left: 0; right: 0; bottom: 0;
+                min-height: calc(64px + env(safe-area-inset-bottom));
+                padding: 7px 5px calc(7px + env(safe-area-inset-bottom));
+                background: rgba(7, 9, 14, .97); border-top: 1px solid #263143;
+                backdrop-filter: blur(18px);
+            }
+            .mobile-bottom-btn {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                gap: 5px; min-width: 0; padding: 4px 2px; border: 0; background: transparent;
+                color: #8993a4; font-size: 10px; font-weight: 700; line-height: 1.1;
+                white-space: nowrap; -webkit-tap-highlight-color: transparent;
+            }
+            .mobile-bottom-btn i { font-size: 18px; }
+            .mobile-bottom-btn.is-active { color: #38bdf8; }
+            .mobile-bottom-btn:active { transform: scale(.96); }
+            .mobile-more-backdrop:not(.hidden) { display: block; position: fixed; inset: 0; z-index: 43; background: rgba(0,0,0,.42); }
+            .mobile-more-menu:not(.hidden) {
+                display: flex; flex-direction: column; gap: 3px; position: fixed; z-index: 44;
+                right: 10px; bottom: calc(73px + env(safe-area-inset-bottom)); width: min(250px, calc(100vw - 20px));
+                padding: 8px; border: 1px solid #2e374a; border-radius: 16px;
+                background: #101621; box-shadow: 0 14px 40px rgba(0,0,0,.55);
+            }
+            .mobile-more-menu button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 12px; border: 0; border-radius: 10px; background: transparent; color: #e5e7eb; text-align: left; font-size: 13px; font-weight: 650; }
+            .mobile-more-menu button:active { background: #222938; }
+            .mobile-more-menu i { width: 18px; color: #38bdf8; text-align: center; }
+            header { padding-top: 10px !important; padding-bottom: 10px !important; }
+            header > div:first-child { align-items: center !important; flex-wrap: nowrap !important; }
+            header .flex.items-center.space-x-3 { min-width: 0; }
+            header .flex.items-center.space-x-3 > div:first-child { width: 34px !important; height: 34px !important; flex: 0 0 34px; font-size: 16px !important; }
+            header h1 { font-size: 14px !important; }
+            header h1 span.text-\[10px\] { display: none; }
+            header p { display: none; }
+            header .flex.items-center.space-x-3 > div:nth-child(2) { padding: 5px 8px !important; }
+            header .flex.items-center.space-x-3 > div:nth-child(2) > span { display: none; }
+            header .flex.items-center.space-x-3 > div:nth-child(2) div:first-child { font-size: 8px !important; }
+            header .flex.items-center.space-x-3 > div:nth-child(2) div:last-child { font-size: 10px !important; }
+            main { padding-bottom: 20px !important; }
+        }
+        @media (max-width: 390px) {
+            .mobile-bottom-btn { font-size: 9px; }
+            .mobile-bottom-btn i { font-size: 17px; }
+        }
+
         @media (max-width: 767px) {
             main { padding-left: 12px !important; padding-right: 12px !important; padding-top: 16px !important; }
             header { padding-left: 12px !important; padding-right: 12px !important; }
@@ -143,6 +195,10 @@
                 <p class="text-xs text-gray-400 mt-1">Terminal Exchange & Mercado Sintético JopJoir</p>
             </div>
 
+            <div class="mb-5 rounded-xl border border-accent-cyan/20 bg-accent-cyan/5 p-3 text-left">
+                <p class="text-xs text-gray-300 font-semibold">Vinculación segura de cuenta</p>
+                <p class="text-[10px] text-gray-500 mt-1">Accede con el usuario y la contraseña de tu cuenta existente de JopJoir.</p>
+            </div>
             <form id="form-login" onsubmit="handleAuthLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Nombre de Usuario</label>
@@ -160,7 +216,7 @@
             </form>
 
             <div class="mt-6 text-center text-[10px] text-gray-500 font-mono">
-                Conectado a Realtime DB (`usernames/` & `users/`)
+                Autenticación y datos de JRMarket: Firebase · Cuentas de juego y Dulucks: JopJoir RTDB
             </div>
         </div>
     </div>
@@ -263,8 +319,8 @@
                 </div>
             </div>
 
-            <!-- Mobile Nav Bar -->
-            <div class="flex md:hidden justify-around mt-3 pt-2 border-t border-obsidian-800 text-[11px] font-bold">
+            <!-- Navegación móvil antigua: se conserva en el DOM por compatibilidad, pero se sustituye visualmente por la barra inferior. -->
+            <div class="legacy-mobile-nav hidden md:hidden">
                 <button onclick="switchTab('dashboard')" class="mobile-nav-btn text-accent-cyan flex flex-col items-center py-1">
                     <i class="fa-solid fa-chart-line mb-0.5"></i> Dashboard
                 </button>
@@ -341,7 +397,7 @@
                         <div class="text-xs text-gray-400 mt-2">Capacidad Máxima Estellar</div>
                     </div>
 
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
+                    <div id="dash-prediction-reserve-card" class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Reserva Pools Predicciones</div>
                         <div class="text-2xl font-black text-accent-cyan font-mono" id="dash-pred-reserves">0.000000</div>
                         <div class="text-xs text-gray-400 mt-2">Liquidación Paridad 1:1 ESTR</div>
@@ -390,7 +446,7 @@
 
                 <!-- Active Predictions & Top Tokens Lists -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="glass-card p-6 rounded-2xl space-y-4">
+                    <div id="dash-predictions-featured" class="glass-card p-6 rounded-2xl space-y-4">
                         <div class="flex justify-between items-center border-b border-obsidian-700/60 pb-3">
                             <h3 class="font-bold text-sm text-white flex items-center gap-2">
                                 <i class="fa-solid fa-bullseye text-accent-gold"></i> Predicciones Destacadas
@@ -829,7 +885,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div id="portfolio-predictions-section">
                             <h4 class="font-black text-sm text-white mb-3 flex items-center gap-2">
                                 <i class="fa-solid fa-bullseye text-accent-gold"></i> Posiciones en Mercado de Predicciones
                             </h4>
@@ -947,7 +1003,7 @@
                         </div>
                         <div class="md:col-span-2 xl:col-span-4">
                             <button onclick="updateDulParamsAdmin()" class="w-full py-2.5 bg-accent-emerald hover:bg-emerald-600 text-obsidian-950 font-extrabold text-xs rounded-lg transition-all">Guardar parámetros del motor DULUCK</button>
-                            <p class="text-[10px] text-gray-500 mt-2">La proyección USD es contable y no representa fondos reales. El límite ESTR de JRMarket no modifica la oferta del juego.</p><p class="text-[10px] text-gray-400 mt-1">Proyección: DULUCK emitidos × valor original USD. No equivale a saldo retirable.</p>
+                            <p class="text-[10px] text-gray-500 mt-2">La proyección USD es contable y no representa fondos reales. El límite ESTR de JRMarket no modifica la oferta del juego.</p><p class="text-[10px] text-gray-400 mt-1">Proyección contable: DULUCK emitidos × valor original USD. No representa fondos reales ni interviene en el cálculo de la cotización.</p>
                         </div>
                     </div>
                 </div>
@@ -993,6 +1049,22 @@
             </section>
 
         </main>
+
+        <!-- NAVEGACIÓN MÓVIL: accesos principales y menú para secciones secundarias -->
+        <div id="mobile-more-backdrop" class="mobile-more-backdrop hidden" onclick="closeMobileMore()"></div>
+        <div id="mobile-more-menu" class="mobile-more-menu hidden" aria-label="Más secciones">
+            <button onclick="switchTab('dulhub'); closeMobileMore()"><i class="fa-solid fa-clover"></i><span>DUL Hub y gráfico</span></button>
+            <button id="mobile-more-predictions" onclick="switchTab('predictions'); closeMobileMore()"><i class="fa-solid fa-bullseye"></i><span>Predicciones</span></button>
+            <button onclick="switchTab('synthetics'); closeMobileMore()"><i class="fa-solid fa-circle-plus"></i><span>Emitir sintético</span></button>
+            <button id="mobile-more-admin" class="hidden" onclick="switchTab('admin'); closeMobileMore()"><i class="fa-solid fa-user-shield"></i><span>Administración</span></button>
+        </div>
+        <nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Navegación principal">
+            <button type="button" data-mobile-tab="dashboard" class="mobile-bottom-btn is-active" onclick="switchTab('dashboard')"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
+            <button type="button" data-mobile-tab="tokens" class="mobile-bottom-btn" onclick="switchTab('tokens')"><i class="fa-solid fa-chart-line"></i><span>Mercados</span></button>
+            <button type="button" data-mobile-tab="swap" class="mobile-bottom-btn" onclick="switchTab('swap')"><i class="fa-solid fa-arrow-right-arrow-left"></i><span>Intercambiar</span></button>
+            <button type="button" data-mobile-tab="portfolio" class="mobile-bottom-btn" onclick="switchTab('portfolio')"><i class="fa-solid fa-wallet"></i><span>Billetera</span></button>
+            <button type="button" id="mobile-more-trigger" class="mobile-bottom-btn" aria-expanded="false" onclick="toggleMobileMore()"><i class="fa-solid fa-ellipsis"></i><span>Más</span></button>
+        </nav>
 
         <!-- FOOTER -->
         <footer class="glass-card border-t border-obsidian-800 py-6 text-center text-xs text-gray-500">
@@ -1256,10 +1328,157 @@
 
     <!-- ================= JAVASCRIPT LOGIC ENGINE ================= -->
     <script>
-        // --- 1. FIREBASE INIT ---
-        const firebaseConfig = { databaseURL: "https://jopjoirdatabase-default-rtdb.firebaseio.com" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        // --- 1. FIREBASE INIT: Firestore del ranking + Realtime Database de JopJoir ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDvm4QUpWVEhigb3xtckbPoCmYt5tdk8uA",
+            authDomain: "ranking-a703b.firebaseapp.com",
+            projectId: "ranking-a703b",
+            storageBucket: "ranking-a703b.firebasestorage.app",
+            messagingSenderId: "1052400903567",
+            appId: "1:1052400903567:web:16fba0dbc8cd6ae94b57fa"
+        };
+        firebase.initializeApp(firebaseConfig, 'jrmarket-cloud');
+        const cloudApp = firebase.app('jrmarket-cloud');
+        const firestore = cloudApp.firestore();
+
+        // RTDB pertenece al proyecto original de JopJoir; se conecta como una app separada.
+        const legacyApp = firebase.initializeApp({ databaseURL: 'https://jopjoirdatabase-default-rtdb.firebaseio.com' }, 'jopjoir-rtdb');
+        const rtdb = legacyApp.database();
+
+        // La API antigua db.ref se conserva como puente de compatibilidad para las escrituras heredadas.
+        // Las lecturas de mercados/tokens/portafolios/transfers/app_settings salen de Firestore.
+        // Solo colecciones públicas pueden leerse desde Firestore sin iniciar sesión.
+        // Las cuentas, inventarios, portafolios y transferencias siguen en la RTDB original.
+        const FIRESTORE_ROOTS = new Set(['markets', 'synthetic_tokens', 'system_config']);
+        function makeSnapshot(value) {
+            return { val: () => value == null ? null : value, exists: () => value != null };
+        }
+        function getNestedValue(source, segments) {
+            return segments.reduce((value, key) => value == null ? undefined : value[key], source);
+        }
+        async function readFirestorePath(path, limit = null) {
+            const parts = String(path || '').split('/').filter(Boolean);
+            const root = parts[0];
+            const collectionName = root;
+            let value = null;
+            if (parts.length === 1) {
+                const query = await firestore.collection(collectionName).get();
+                value = {};
+                query.forEach(doc => { value[doc.id] = doc.data(); });
+                if (query.empty) value = (await rtdb.ref(path).once('value')).val();
+            } else {
+                const docId = parts[1];
+                const snap = await firestore.collection(collectionName).doc(docId).get();
+                value = snap.exists ? snap.data() : (await rtdb.ref(path).once('value')).val();
+                if (parts.length > 2) value = getNestedValue(value, parts.slice(2));
+                if (value == null && parts.length > 2) value = (await rtdb.ref(path).once('value')).val();
+            }
+            if (limit && value && typeof value === 'object' && !Array.isArray(value)) {
+                const entries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
+                value = Object.fromEntries(entries.slice(-limit));
+            }
+            return makeSnapshot(value);
+        }
+        function firestoreReadRef(path, limit = null) {
+            return {
+                once: async (eventName) => eventName === 'value' ? readFirestorePath(path, limit) : makeSnapshot(null),
+                on: (eventName, callback) => {
+                    if (eventName !== 'value') return () => {};
+                    const parts = String(path || '').split('/').filter(Boolean);
+                    const root = parts[0];
+                    if (parts.length === 1) {
+                        if (root === 'transfers') {
+                            let sent = {}, received = {}, fallbackUnsubscribe = null;
+                            const emit = () => {
+                                const merged = { ...sent, ...received };
+                                if (!Object.keys(merged).length) {
+                                    if (!fallbackUnsubscribe) fallbackUnsubscribe = rtdb.ref('transfers').limitToLast(10).on('value', snap => callback(makeSnapshot(snap.val())));
+                                } else {
+                                    if (fallbackUnsubscribe) { fallbackUnsubscribe(); fallbackUnsubscribe = null; }
+                                    const sorted = Object.entries(merged).sort((a, b) => Number(b[1]?.timestamp || 0) - Number(a[1]?.timestamp || 0)).slice(0, 10);
+                                    callback(makeSnapshot(Object.fromEntries(sorted)));
+                                }
+                            };
+                            const a = firestore.collection('transfers').where('sender_uid', '==', activeUID).onSnapshot(query => {
+                                sent = {}; query.forEach(doc => { sent[doc.id] = doc.data(); }); emit();
+                            });
+                            const b = firestore.collection('transfers').where('receiver_uid', '==', activeUID).onSnapshot(query => {
+                                received = {}; query.forEach(doc => { received[doc.id] = doc.data(); }); emit();
+                            });
+                            return () => { a(); b(); if (fallbackUnsubscribe) fallbackUnsubscribe(); };
+                        }
+                        let fallbackUnsubscribe = null;
+                        return firestore.collection(root).onSnapshot(query => {
+                            if (query.empty) {
+                                if (!fallbackUnsubscribe) fallbackUnsubscribe = rtdb.ref(path).on('value', snap => callback(makeSnapshot(snap.val())));
+                                return;
+                            }
+                            if (fallbackUnsubscribe) { fallbackUnsubscribe(); fallbackUnsubscribe = null; }
+                            const value = {};
+                            query.forEach(doc => { value[doc.id] = doc.data(); });
+                            callback(makeSnapshot(value));
+                        });
+                    }
+                    if (parts.length === 2) {
+                        let fallbackUnsubscribe = null;
+                        return firestore.collection(root).doc(parts[1]).onSnapshot(doc => {
+                            if (!doc.exists) {
+                                if (!fallbackUnsubscribe) fallbackUnsubscribe = rtdb.ref(path).on('value', snap => callback(makeSnapshot(snap.val())));
+                                return;
+                            }
+                            if (fallbackUnsubscribe) { fallbackUnsubscribe(); fallbackUnsubscribe = null; }
+                            callback(makeSnapshot(doc.data()));
+                        });
+                    }
+                    return firestore.collection(root).doc(parts[1]).onSnapshot(doc => {
+                        const nested = doc.exists ? getNestedValue(doc.data(), parts.slice(2)) : null;
+                        callback(makeSnapshot(nested));
+                    });
+                },
+                limitToLast: (count) => firestoreReadRef(path, count),
+                update: (data) => rtdb.ref(path).update(data),
+                set: (data) => rtdb.ref(path).set(data),
+                remove: () => rtdb.ref(path).remove(),
+                push: () => rtdb.ref(path).push()
+            };
+        }
+        function legacyRef(path = '') {
+            // Firebase RTDB acepta ref() para la raíz, pero rechaza ref('') como ruta vacía.
+            const ref = path ? rtdb.ref(path) : rtdb.ref();
+            const root = String(path).split('/').filter(Boolean)[0];
+            if (!FIRESTORE_ROOTS.has(root) && path) return ref;
+            return {
+                ...ref,
+                update: async (data) => {
+                    await ref.update(data);
+                },
+                set: async (data) => {
+                    await ref.set(data);
+                },
+                remove: async () => {
+                    await ref.remove();
+                },
+                push: (...args) => ref.push(...args)
+            };
+        }
+        const db = {
+            ref: (path = '') => {
+                const root = String(path).split('/').filter(Boolean)[0];
+                if (!path) return legacyRef('');
+                if (!FIRESTORE_ROOTS.has(root)) return rtdb.ref(path);
+                const readRef = firestoreReadRef(path);
+                const writeRef = legacyRef(path);
+                return {
+                    once: readRef.once,
+                    on: readRef.on,
+                    limitToLast: readRef.limitToLast,
+                    update: writeRef.update,
+                    set: writeRef.set,
+                    remove: writeRef.remove,
+                    push: writeRef.push
+                };
+            }
+        };
 
         // --- 2. GLOBAL STATE ---
         let activeUID = null;
@@ -1424,7 +1643,9 @@
             } catch (e) { console.error("Error inicializando Duluck:", e); }
         }
 
-        // --- 5. AUTHENTICATION & LOGIN ---
+        // --- 5. AUTENTICACIÓN DE CUENTA JOPJOIR (Realtime Database existente) ---
+        // Se conserva el mecanismo de acceso de la versión original de JRMarket.
+        // No requiere Google Authentication, Cloud Functions ni facturación Blaze.
         async function handleAuthLogin(e) {
             e.preventDefault();
             const txtUser = document.getElementById('auth-user').value.trim();
@@ -1433,44 +1654,48 @@
             const cleanUser = cleanUsername(txtUser);
 
             if (!cleanUser || !txtPass) {
-                showToast('Ingresa tu usuario y contraseña.', 'error');
+                showToast('Ingresa tu usuario y contraseña de JopJoir.', 'error');
                 return;
             }
 
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...`;
-
             try {
-                const snap = await db.ref('usernames/' + cleanUser).once('value');
+                const snap = await rtdb.ref(`usernames/${cleanUser}`).once('value');
                 const userData = snap.val();
-
-                if (userData && userData.pass === txtPass) {
-                    const userSnap = await db.ref('users/' + userData.uid).once('value');
-                    const uVal = userSnap.val();
-                    
-                    if (uVal && uVal.baneado) {
-                        showToast('⛔ Tu cuenta ha sido suspendida.', 'error');
-                        return;
-                    }
-
-                    loginSuccess(userData.uid, txtUser);
-                } else {
+                if (!userData || userData.pass !== txtPass) {
                     showToast(userData ? 'Contraseña incorrecta.' : 'Usuario no registrado en JopJoir.', 'error');
+                    return;
                 }
+
+                const gameUid = userData.uid;
+                if (!gameUid) throw new Error('El registro de usuario no contiene un UID válido.');
+                const userSnap = await rtdb.ref(`users/${gameUid}`).once('value');
+                const gameUser = userSnap.val();
+                if (!gameUser) throw new Error('No se encontró el perfil de esa cuenta en JopJoir.');
+                if (gameUser.baneado) {
+                    showToast('⛔ Tu cuenta ha sido suspendida.', 'error');
+                    return;
+                }
+
+                loginSuccess(gameUid, txtUser);
+                showToast('Acceso a JRMarket correcto.', 'success');
             } catch (err) {
-                console.error(err);
-                showToast('Error al conectar con la base de datos.', 'error');
+                console.error('Error al autenticar la cuenta JopJoir:', err);
+                showToast(err.message || 'No se pudo comprobar la cuenta en JopJoir.', 'error');
             } finally {
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Acceder al Terminal ESTR`;
             }
         }
 
+        const JR_SESSION_KEY = 'jrmarket_session_v1';
+
         function loginSuccess(uid, username) {
+            if (activeUID === uid && document.getElementById('auth-modal').classList.contains('hidden')) return;
             activeUID = uid;
             activeUsername = username;
-            localStorage.setItem('jrmarket_uid', uid);
-            localStorage.setItem('jrmarket_username', username);
+            try { localStorage.setItem(JR_SESSION_KEY, JSON.stringify({ uid: String(uid), username: String(username), savedAt: Date.now() })); } catch (e) { console.warn('No se pudo guardar la sesión local.', e); }
 
             document.getElementById('auth-modal').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
@@ -1481,15 +1706,30 @@
             initRealtimeListeners();
         }
 
+        async function restoreSavedSession() {
+            let saved;
+            try { saved = JSON.parse(localStorage.getItem(JR_SESSION_KEY) || 'null'); } catch (_) { saved = null; }
+            if (!saved?.uid || !saved?.username) return;
+            try {
+                const userSnap = await rtdb.ref(`users/${saved.uid}`).once('value');
+                const user = userSnap.val();
+                if (!user || user.baneado) throw new Error('La sesión guardada ya no es válida.');
+                loginSuccess(saved.uid, saved.username);
+                showToast(`Sesión restaurada: ${saved.username}`, 'success');
+            } catch (err) {
+                console.warn('No se pudo restaurar la sesión guardada:', err);
+                localStorage.removeItem(JR_SESSION_KEY);
+            }
+        }
+
         function handleLogout() {
-            localStorage.removeItem('jrmarket_uid');
-            localStorage.removeItem('jrmarket_username');
+            try { localStorage.removeItem(JR_SESSION_KEY); } catch (_) {}
             location.reload();
         }
 
         // --- 6. REALTIME DATABASE LISTENERS ---
         function initRealtimeListeners() {
-            db.ref('system_config/app_settings').on('value', snap => {
+            rtdb.ref('system_config/app_settings').on('value', snap => {
                 globalAppSettings = snap.val() || { hide_predictions: false };
                 applySystemSettingsUI();
             });
@@ -1576,16 +1816,19 @@
             const modBadge = document.getElementById('header-mod-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
             const mobileAdminNavBtn = document.getElementById('mob-nav-admin');
+            const mobileMoreAdminBtn = document.getElementById('mobile-more-admin');
             if (isUserModerator()) {
                 modBadge.classList.remove('hidden');
                 modBadge.classList.add('flex');
                 if (adminNavBtn) adminNavBtn.classList.remove('hidden');
                 if (mobileAdminNavBtn) mobileAdminNavBtn.classList.remove('hidden');
+                if (mobileMoreAdminBtn) mobileMoreAdminBtn.classList.remove('hidden');
             } else {
                 modBadge.classList.add('hidden');
                 modBadge.classList.remove('flex');
                 if (adminNavBtn) adminNavBtn.classList.add('hidden');
                 if (mobileAdminNavBtn) mobileAdminNavBtn.classList.add('hidden');
+                if (mobileMoreAdminBtn) mobileMoreAdminBtn.classList.add('hidden');
             }
 
             const avatarEl = document.getElementById('header-user-avatar');
@@ -1608,25 +1851,34 @@
         }
 
         function applySystemSettingsUI() {
-            const hidePredictions = globalAppSettings.hide_predictions;
+            const hidePredictions = Boolean(globalAppSettings.hide_predictions);
             const isMod = isUserModerator();
+            const hideForViewer = hidePredictions && !isMod;
 
             const btnVis = document.getElementById('btn-toggle-predictions-vis');
             if (btnVis) {
                 btnVis.textContent = hidePredictions ? 'OCULTO (GLOBAL)' : 'VISIBLE';
-                btnVis.className = hidePredictions 
+                btnVis.className = hidePredictions
                     ? 'px-3.5 py-1.5 rounded-xl font-bold font-mono text-xs bg-accent-crimson text-white'
                     : 'px-3.5 py-1.5 rounded-xl font-bold font-mono text-xs bg-accent-emerald text-obsidian-950';
             }
 
-            const predNav = document.getElementById('nav-btn-predictions');
-            const predMob = document.getElementById('mob-nav-pred');
-            if (hidePredictions && !isMod) {
-                if (predNav) predNav.classList.add('hidden');
-                if (predMob) predMob.classList.add('hidden');
-            } else {
-                if (predNav) predNav.classList.remove('hidden');
-                if (predMob) predMob.classList.remove('hidden');
+            ['nav-btn-predictions', 'mob-nav-pred', 'mobile-more-predictions',
+             'dash-prediction-reserve-card', 'dash-predictions-featured',
+             'portfolio-predictions-section'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', hideForViewer);
+            });
+
+            if (hideForViewer) {
+                const predictionTab = document.getElementById('tab-predictions');
+                if (predictionTab && !predictionTab.classList.contains('hidden')) switchTab('dashboard');
+                const positions = document.getElementById('port-prediction-positions');
+                if (positions) positions.innerHTML = '';
+                const dashboardMarkets = document.getElementById('dash-top-markets-list');
+                if (dashboardMarkets) dashboardMarkets.innerHTML = '';
+                const predictionGrid = document.getElementById('prediction-markets-grid');
+                if (predictionGrid) predictionGrid.innerHTML = '';
             }
         }
 
@@ -1674,7 +1926,7 @@
 
             // Top Mercados List
             const topMarketsEl = document.getElementById('dash-top-markets-list');
-            const marketKeys = Object.keys(globalMarkets).reverse().filter(k => globalMarkets[k].info?.estado !== 'HIDDEN').slice(0, 3);
+            const marketKeys = globalAppSettings.hide_predictions && !isUserModerator() ? [] : Object.keys(globalMarkets).reverse().filter(k => globalMarkets[k].info?.estado !== 'HIDDEN').slice(0, 3);
             if (marketKeys.length === 0) {
                 topMarketsEl.innerHTML = `<p class="text-xs text-gray-400">Sin predicciones activas.</p>`;
             } else {
@@ -2098,6 +2350,43 @@
             }
         }
 
+        function attachChartInteraction(canvas, points, valueFormatter) {
+            if (!canvas || !Array.isArray(points) || !points.length) return;
+            const parent = canvas.parentElement;
+            if (!parent) return;
+            parent.style.position = 'relative';
+            canvas.style.touchAction = 'pan-y';
+            let tooltip = parent.querySelector('.jr-chart-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'jr-chart-tooltip';
+                tooltip.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;display:none;padding:7px 9px;border:1px solid #334155;border-radius:8px;background:rgba(7,12,22,.94);color:#e5e7eb;font:11px monospace;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.25);white-space:nowrap;';
+                parent.appendChild(tooltip);
+            }
+            if (canvas.__jrChartPointerHandler) canvas.removeEventListener('pointermove', canvas.__jrChartPointerHandler);
+            if (canvas.__jrChartLeaveHandler) canvas.removeEventListener('pointerleave', canvas.__jrChartLeaveHandler);
+            const moveHandler = event => {
+                const rect = canvas.getBoundingClientRect();
+                if (rect.width <= 0) return;
+                const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+                const index = Math.max(0, Math.min(points.length - 1, Math.round(ratio * (points.length - 1))));
+                const point = points[index] || {};
+                const timestamp = Number(point.t);
+                const dateText = Number.isFinite(timestamp) && timestamp > 0 ? new Date(timestamp).toLocaleString() : `Punto ${index + 1}`;
+                const value = Number(point.displayValue ?? point.p);
+                tooltip.textContent = `${dateText} · ${valueFormatter(value)}`;
+                const parentRect = parent.getBoundingClientRect();
+                const left = Math.max(6, Math.min(parentRect.width - tooltip.offsetWidth - 6, event.clientX - parentRect.left + 10));
+                tooltip.style.left = `${left}px`;
+                tooltip.style.display = 'block';
+            };
+            const leaveHandler = () => { tooltip.style.display = 'none'; };
+            canvas.__jrChartPointerHandler = moveHandler;
+            canvas.__jrChartLeaveHandler = leaveHandler;
+            canvas.addEventListener('pointermove', moveHandler, { passive: true });
+            canvas.addEventListener('pointerleave', leaveHandler, { passive: true });
+        }
+
         // --- 10. PERSISTENT CANVAS CHART ENGINE ---
         async function obtenerHistorialPersistente(symbol) {
             // El gráfico utiliza exclusivamente cotizaciones guardadas en Firebase.
@@ -2154,9 +2443,9 @@
             try {
                 const rawHistory = await obtenerPuntosGraficoDuluck();
                 const multiplier = dulChartUnit === 'ESTR' ? 1.0 : ESTRELLA_BASE_USD;
-                const points = (Array.isArray(rawHistory) ? rawHistory : [])
-                    .filter(pt => Number.isFinite(Number(pt?.p)) && Number(pt.p) > 0)
-                    .map(pt => Number(pt.p) * multiplier);
+                const chartEntries = (Array.isArray(rawHistory) ? rawHistory : []).filter(pt => Number.isFinite(Number(pt?.p)) && Number(pt.p) > 0);
+                const points = chartEntries.map(pt => Number(pt.p) * multiplier);
+                attachChartInteraction(canvas, chartEntries.map((pt, i) => ({ ...pt, displayValue: points[i] })), value => dulChartUnit === 'ESTR' ? `${fijarPrecision(value, 6)} ✦` : formatUSD(value));
                 if (!points.length) {
                     ctx.fillStyle = '#8b9bb4'; ctx.font = `${12 * dpr}px JetBrains Mono`;
                     ctx.textAlign = 'center';
@@ -2525,12 +2814,18 @@
             try {
                 const rawHistory = selectedTokenForDetail === 'DULUCK' ? await obtenerPuntosGraficoDuluck() : await obtenerHistorialPersistente(selectedTokenForDetail);
                 const multiplier = tokenChartState.unit === 'ESTR' ? 1.0 : ESTRELLA_BASE_USD;
-                const valid = (Array.isArray(rawHistory) ? rawHistory : []).filter(pt => Number.isFinite(Number(pt?.p)) && Number(pt.p)>0);
+                let valid = (Array.isArray(rawHistory) ? rawHistory : []).filter(pt => Number.isFinite(Number(pt?.p)) && Number(pt.p)>0);
+                const timeframeMs = ({ '1H': 3600000, '24H': 86400000, '7D': 604800000, '1M': 2592000000 })[tokenChartState.timeframe] || 86400000;
+                if (valid.length > 1) {
+                    const cutoff = Date.now() - timeframeMs;
+                    valid = valid.filter(pt => Number(pt.t) >= cutoff);
+                }
                 if (!valid.length) {
                     ctx.fillStyle='#8b9bb4'; ctx.font=`12px JetBrains Mono`; ctx.textAlign='center';
-                    ctx.fillText('Sin cotizaciones registradas',width/2,height/2); ctx.textAlign='left'; return;
+                    ctx.fillText('Sin cotizaciones en este periodo',width/2,height/2); ctx.textAlign='left'; return;
                 }
                 const closes=valid.map(pt=>Number(pt.p)*multiplier);
+                attachChartInteraction(canvas, valid.map((pt, i) => ({ ...pt, displayValue: closes[i] })), value => tokenChartState.unit === 'ESTR' ? `${fijarPrecision(value, 6)} ✦` : formatUSD(value));
                 const candles=valid.map((pt,i)=>{
                     const close=closes[i], open=i>0?closes[i-1]:close;
                     return {open,close,high:Math.max(open,close),low:Math.min(open,close)};
@@ -2777,6 +3072,7 @@
         function renderPredictionMarkets() {
             const container = document.getElementById('prediction-markets-grid');
             if (!container) return;
+            if (globalAppSettings.hide_predictions && !isUserModerator()) { container.innerHTML = ''; return; }
             const keys = Object.keys(globalMarkets).reverse();
             const isMod = isUserModerator();
             const searchText = (document.getElementById('prediction-market-search')?.value || '').trim().toLocaleLowerCase();
@@ -3020,59 +3316,151 @@
 
         async function handleCreateSyntheticToken(e) {
             e.preventDefault();
+
+            const form = e.currentTarget || e.target;
+            const submitButton = form?.querySelector('button[type="submit"]');
+
             const symbol = document.getElementById('create-token-symbol').value.trim().toUpperCase();
             const name = document.getElementById('create-token-name').value.trim();
-            const bParam = fijarPrecision(document.getElementById('create-token-b').value);
-            const aParam = fijarPrecision(document.getElementById('create-token-a').value);
-            const seedDeposit = fijarPrecision(document.getElementById('create-token-seed').value);
+            const bParam = Number(document.getElementById('create-token-b').value);
+            const aParam = Number(document.getElementById('create-token-a').value);
+            const seedDeposit = Number(document.getElementById('create-token-seed').value);
 
-            if (!symbol || !name || seedDeposit < 100) {
+            // Validación de sesión y datos antes de consultar o escribir en Firebase.
+            if (!activeUID || !activeUsername) {
+                showToast('La sesión no está activa. Vuelve a iniciar sesión.', 'error');
+                return;
+            }
+
+            if (!symbol || !name) {
+                showToast('Completa el símbolo y el nombre de la moneda.', 'error');
+                return;
+            }
+
+            // Firebase Realtime Database no admite estos caracteres en una clave.
+            if (!/^[A-Z0-9_-]{1,20}$/.test(symbol)) {
+                showToast('El ticker solo puede contener letras, números, guion y guion bajo (máximo 20 caracteres).', 'error');
+                return;
+            }
+
+            if (!Number.isFinite(aParam) || !Number.isFinite(bParam) ||
+                aParam <= 0 || bParam <= 0) {
+                showToast('Los parámetros de la curva deben ser números mayores que cero.', 'error');
+                return;
+            }
+
+            if (!Number.isFinite(seedDeposit) || seedDeposit < 100) {
                 showToast('El capital inicial mínimo es de 100 Estrellas.', 'error');
                 return;
             }
 
-            if (globalTokens[symbol] || symbol === 'ESTRELLA' || symbol === 'DULUCK') {
-                showToast('El ticker ya existe.', 'error');
+            if (symbol === 'ESTRELLA' || symbol === 'DULUCK') {
+                showToast('Ese ticker está reservado por el sistema.', 'error');
                 return;
             }
 
-            const userEstrellas = activeUserData?.inventario?.estrellas || 0;
-            if (userEstrellas < seedDeposit) {
-                showToast('Saldo insuficiente de Estrellas para el colateral inicial.', 'error');
-                return;
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.dataset.originalText = submitButton.textContent;
+                submitButton.textContent = 'Emitiendo token...';
             }
 
             try {
-                const S_init = (-bParam + Math.sqrt(Math.pow(bParam, 2) + 2 * aParam * seedDeposit)) / aParam;
-                const spotPrice = aParam * S_init + bParam;
+                // Leer el saldo y el ticker directamente de Firebase para no depender
+                // de datos locales que podrían haber quedado desactualizados.
+                const [userSnap, tokenSnap] = await Promise.all([
+                    db.ref(`users/${activeUID}/inventario/estrellas`).once('value'),
+                    db.ref(`synthetic_tokens/${symbol}`).once('value')
+                ]);
 
-                const updates = {};
-                updates[`users/${activeUID}/inventario/estrellas`] = fijarPrecision(userEstrellas - seedDeposit);
-                updates[`users/${activeUID}/inventario/${symbol}`] = fijarPrecision(S_init);
+                if (tokenSnap.exists()) {
+                    showToast('El ticker ya existe.', 'error');
+                    return;
+                }
 
-                updates[`synthetic_tokens/${symbol}`] = {
+                const userEstrellas = Number(userSnap.val()) || 0;
+                if (userEstrellas < seedDeposit) {
+                    showToast('Saldo insuficiente de Estrellas para el colateral inicial.', 'error');
+                    return;
+                }
+
+                // Se calcula la oferta inicial a partir del capital semilla:
+                // seedDeposit = b*S + (a*S²)/2
+                const discriminant = (bParam * bParam) + (2 * aParam * seedDeposit);
+                const S_init = (-bParam + Math.sqrt(discriminant)) / aParam;
+                const spotPrice = (aParam * S_init) + bParam;
+
+                if (!Number.isFinite(S_init) || S_init <= 0 ||
+                    !Number.isFinite(spotPrice) || spotPrice <= 0) {
+                    throw new Error('No se pudo calcular una oferta o un precio inicial válido.');
+                }
+
+                const now = Date.now();
+                const txId = db.ref(`synthetic_tokens/${symbol}/historial`).push().key;
+
+                if (!txId) {
+                    throw new Error('Firebase no pudo generar el identificador del historial.');
+                }
+
+                // Importante: el historial se incluye dentro del objeto del token.
+                // No se debe actualizar synthetic_tokens/{symbol} y una subruta
+                // synthetic_tokens/{symbol}/historial/... en el mismo update().
+                const tokenData = {
                     nombre: name,
                     simbolo: symbol,
                     creador: activeUsername,
                     creadorUid: activeUID,
                     oferta_total: fijarPrecision(S_init),
-                    reserva_estrellas: seedDeposit,
+                    reserva_estrellas: fijarPrecision(seedDeposit),
                     precio_actual: fijarPrecision(spotPrice),
-                    bonding_curve: { a: aParam, b: bParam }
+                    bonding_curve: {
+                        a: aParam,
+                        b: bParam
+                    },
+                    historial: {
+                        [txId]: {
+                            t: now,
+                            p: fijarPrecision(spotPrice),
+                            v: Math.floor(S_init),
+                            type: 'BUY'
+                        }
+                    }
                 };
 
-                const txId = `hist_${Date.now()}_init`;
-                updates[`synthetic_tokens/${symbol}/historial/${txId}`] = {
-                    t: Date.now(), p: fijarPrecision(spotPrice), v: Math.floor(S_init), type: 'BUY'
-                };
+                const updates = {};
+                updates[`users/${activeUID}/inventario/estrellas`] =
+                    fijarPrecision(userEstrellas - seedDeposit);
+                updates[`users/${activeUID}/inventario/${symbol}`] =
+                    fijarPrecision(S_init);
+                updates[`synthetic_tokens/${symbol}`] = tokenData;
 
                 await db.ref().update(updates);
 
+                // Reflejar inmediatamente el saldo local; el listener de Firebase
+                // volverá a sincronizar el registro completo.
+                if (activeUserData?.inventario) {
+                    activeUserData.inventario.estrellas = fijarPrecision(userEstrellas - seedDeposit);
+                    activeUserData.inventario[symbol] = fijarPrecision(S_init);
+                }
+
                 showToast(`¡Token ${symbol} emitido exitosamente!`, 'success');
+                form.reset();
+                document.getElementById('create-token-b').value = '0.100000';
+                document.getElementById('create-token-a').value = '0.001000';
+                document.getElementById('create-token-seed').value = '100.000000';
+                updateCreateTokenPreview();
                 switchTab('tokens');
+
             } catch (err) {
-                console.error(err);
-                showToast('Error al crear el token.', 'error');
+                console.error('Error al crear token sintético:', err);
+                const detail = err?.message || err?.code || 'Error desconocido';
+                showToast(`No se pudo crear el token: ${detail}`, 'error');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = submitButton.dataset.originalText || 'Emitir y Colateralizar Token';
+                    delete submitButton.dataset.originalText;
+                }
             }
         }
 
@@ -3310,7 +3698,10 @@
             const current = globalAppSettings.hide_predictions;
 
             try {
-                await db.ref('system_config/app_settings').update({ hide_predictions: !current });
+                const nextSettings = { ...globalAppSettings, hide_predictions: !current };
+                await rtdb.ref('system_config/app_settings').update({ hide_predictions: nextSettings.hide_predictions });
+                globalAppSettings = nextSettings;
+                applySystemSettingsUI();
                 showToast('Configuración global actualizada.', 'success');
             } catch (err) {
                 showToast('Error al cambiar configuración.', 'error');
@@ -3602,8 +3993,37 @@
             }
         }
 
+        // --- Navegación móvil ---
+        function toggleMobileMore() {
+            const menu = document.getElementById('mobile-more-menu');
+            const backdrop = document.getElementById('mobile-more-backdrop');
+            const trigger = document.getElementById('mobile-more-trigger');
+            const opening = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', !opening);
+            backdrop.classList.toggle('hidden', !opening);
+            trigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        }
+        function closeMobileMore() {
+            document.getElementById('mobile-more-menu')?.classList.add('hidden');
+            document.getElementById('mobile-more-backdrop')?.classList.add('hidden');
+            document.getElementById('mobile-more-trigger')?.setAttribute('aria-expanded', 'false');
+        }
+        function updateMobileNavigation(tabId) {
+            const primaryTabs = ['dashboard', 'tokens', 'swap', 'portfolio'];
+            document.querySelectorAll('.mobile-bottom-btn[data-mobile-tab]').forEach(btn => {
+                btn.classList.toggle('is-active', btn.dataset.mobileTab === tabId);
+            });
+            const moreTrigger = document.getElementById('mobile-more-trigger');
+            if (moreTrigger) moreTrigger.classList.toggle('is-active', !primaryTabs.includes(tabId));
+            closeMobileMore();
+        }
+
         // --- 17. TAB NAVIGATION SWITCHING ---
         function switchTab(tabId) {
+            if (tabId === 'predictions' && globalAppSettings.hide_predictions && !isUserModerator()) {
+                showToast('La sección de predicciones está oculta globalmente.', 'info');
+                tabId = 'dashboard';
+            }
             if ((tabId === 'admin' || tabId === 'admin-db') && !isUserModerator()) {
                 showToast('⛔ Acceso denegado: esta pestaña está reservada para la cuenta administradora autorizada.', 'error');
                 tabId = 'dashboard';
@@ -3613,6 +4033,7 @@
             const targetTab = document.getElementById(`tab-${tabId}`);
             if (!targetTab) { showToast('No se encontró esa sección.', 'error'); return; }
             targetTab.classList.remove('hidden');
+            updateMobileNavigation(tabId);
 
             document.querySelectorAll('.nav-tab-btn').forEach(b => {
                 b.className = 'nav-tab-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition text-gray-400 hover:text-white hover:bg-obsidian-900';
@@ -3634,19 +4055,15 @@
         }
 
         // --- 18. AUTO SESSION RESTORATION ---
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedUid = localStorage.getItem('jrmarket_uid');
-            const savedUser = localStorage.getItem('jrmarket_username');
-
-            if (savedUid && savedUser) {
-                loginSuccess(savedUid, savedUser);
-            }
-        });
+        // Firebase Authentication restaura la sesión y el vínculo se recupera desde users/{authUid}.
 
         window.addEventListener('resize', () => {
             if (!document.getElementById('tab-dulhub').classList.contains('hidden')) drawDulChartCanvas();
             if (!document.getElementById('modal-token-detail').classList.contains('hidden')) drawAdvancedTokenChartCanvas();
         });
+
+        // Restaura la cuenta en este navegador sin volver a pedir credenciales en cada visita.
+        restoreSavedSession();
     </script>
 </body>
 </html>
