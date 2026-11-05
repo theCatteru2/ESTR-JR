@@ -228,17 +228,6 @@
         <div class="bg-black border-b border-obsidian-800 text-[11px] overflow-hidden py-1.5 font-mono text-gray-400 flex items-center">
             <div class="animate-marquee whitespace-nowrap flex items-center gap-8">
                 <span class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-accent-cyan animate-pulse"></span>
-                    <span>Circulante ESTR:</span>
-                    <span class="text-white font-bold" id="ticker-circulating-estr">0.000000 ✦</span>
-                </span>
-                <span class="text-obsidian-700">|</span>
-                <span class="flex items-center gap-1.5">
-                    <span>Reserva Central L_max:</span>
-                    <span class="text-accent-cyan font-bold">10,000,000,000,000 ✦</span>
-                </span>
-                <span class="text-obsidian-700">|</span>
-                <span class="flex items-center gap-1.5">
                     <span>Circulante Dulucks ($S_{DUL}$):</span>
                     <span class="text-accent-emerald font-bold" id="ticker-circulating-duluck">0.000000 🍀</span>
                 </span>
@@ -394,35 +383,30 @@
                     </div>
                 </div>
 
-                <!-- Indicadores globales del sistema -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Circulante ESTR Global</div>
-                        <div class="text-2xl font-black text-accent-cyan font-mono" id="dash-total-estrellas">0.000000</div>
-                        <div class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-accent-emerald inline-block"></span>
-                            <span id="dash-active-accounts" class="font-bold text-white">0</span> Cuentas escaneadas
+                <!-- Datos agregados: referencia informativa, no saldos de una wallet -->
+                <details class="glass-card rounded-2xl border border-obsidian-700/70">
+                    <summary class="px-4 py-3 cursor-pointer text-xs font-bold text-gray-300 flex items-center justify-between">
+                        <span>Datos agregados del sistema</span>
+                        <span class="text-[10px] font-normal text-gray-500">Valores informativos · desplegar</span>
+                    </summary>
+                    <div class="px-4 pb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="p-3 rounded-xl bg-obsidian-950/70">
+                            <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Saldos ESTR sumados</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-200 font-mono" id="dash-total-estrellas">—</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Suma de inventarios cargados; no representa una reserva central.</div>
+                        </div>
+                        <div id="dash-prediction-reserve-card" class="p-3 rounded-xl bg-obsidian-950/70">
+                            <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Colateral registrado en predicciones</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-200 font-mono" id="dash-pred-reserves">—</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Suma de reservas declaradas por esos mercados.</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-obsidian-950/70">
+                            <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Colateral registrado en sintéticos</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-200 font-mono" id="dash-synth-reserves">—</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Suma de reservas declaradas por esos tokens.</div>
                         </div>
                     </div>
-
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Reserva L_max Sistema</div>
-                        <div class="text-2xl font-black text-white font-mono">10,000,000,000,000</div>
-                        <div class="text-xs text-gray-400 mt-2">Capacidad Máxima Estellar</div>
-                    </div>
-
-                    <div id="dash-prediction-reserve-card" class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Reserva Pools Predicciones</div>
-                        <div class="text-2xl font-black text-accent-cyan font-mono" id="dash-pred-reserves">0.000000</div>
-                        <div class="text-xs text-gray-400 mt-2">Liquidación Paridad 1:1 ESTR</div>
-                    </div>
-
-                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Reserva Curvas Sintéticas</div>
-                        <div class="text-2xl font-black text-accent-emerald font-mono" id="dash-synth-reserves">0.000000</div>
-                        <div class="text-xs text-gray-400 mt-2">Colateral de Respaldo Tokenizado</div>
-                    </div>
-                </div>
+                </details>
 
                 <!-- Duluck Monitor Card -->
                 <div class="glass-card p-6 rounded-2xl space-y-4">
@@ -1086,7 +1070,6 @@
                 <p>© 2026 ESTR JRMarket - Plataforma Sintética JopJoir. Todos los derechos reservados.</p>
                 <div class="flex gap-4 font-mono text-[11px] text-gray-400">
                     <span>Realtime DB Engine</span>
-                    <span>Reserva L_max 10T</span>
                 </div>
             </div>
         </footer>
@@ -1904,17 +1887,20 @@
             }
         }
 
+        function formatCompactNumber(value) {
+            const n = Number(value) || 0;
+            return new Intl.NumberFormat('es-AR', { notation: 'compact', maximumFractionDigits: 2 }).format(n);
+        }
+
         // --- 7. RENDER DASHBOARD ---
         function renderDashboard() {
             let totalEstrellasCirculating = 0;
             let totalDulucksCirculating = 0;
-            let activeAccounts = 0;
 
             Object.values(globalUsers).forEach(u => {
                 if (!u.baneado && u.inventario) {
                     if (typeof u.inventario.estrellas === 'number') totalEstrellasCirculating += u.inventario.estrellas;
                     if (typeof u.inventario.dulucks === 'number') totalDulucksCirculating += u.inventario.dulucks;
-                    activeAccounts++;
                 }
             });
 
@@ -1924,13 +1910,11 @@
             const duluckRateESTR = obtenerPrecioSpotDuluck(totalDulucksCirculating);
             const duluckUSDVal = fijarPrecision(duluckRateESTR * ESTRELLA_BASE_USD);
 
-            document.getElementById('ticker-circulating-estr').textContent = `${formatNumber(totalEstrellasCirculating)} ✦`;
             document.getElementById('ticker-circulating-duluck').textContent = `${formatNumber(totalDulucksCirculating)} 🍀`;
             document.getElementById('ticker-duluck-rate').textContent = `${formatNumber(duluckRateESTR)} ✦`;
             document.getElementById('ticker-duluck-usd').textContent = formatUSD(duluckUSDVal);
 
-            document.getElementById('dash-total-estrellas').textContent = formatNumber(totalEstrellasCirculating);
-            document.getElementById('dash-active-accounts').textContent = activeAccounts;
+            document.getElementById('dash-total-estrellas').textContent = formatCompactNumber(totalEstrellasCirculating);
 
             let predReserves = 0;
             Object.values(globalMarkets).forEach(m => predReserves += (m.reserva_estrellas || 0));
@@ -1938,8 +1922,8 @@
             let synthReserves = 0;
             Object.values(globalTokens).forEach(t => synthReserves += (t.reserva_estrellas || 0));
 
-            document.getElementById('dash-pred-reserves').textContent = formatNumber(predReserves);
-            document.getElementById('dash-synth-reserves').textContent = formatNumber(synthReserves);
+            document.getElementById('dash-pred-reserves').textContent = formatCompactNumber(predReserves);
+            document.getElementById('dash-synth-reserves').textContent = formatCompactNumber(synthReserves);
 
             document.getElementById('dash-duluck-circulating').textContent = `${formatNumber(totalDulucksCirculating)} 🍀`;
             document.getElementById('dash-duluck-spot-estr').textContent = `${formatNumber(duluckRateESTR)} ✦`;
