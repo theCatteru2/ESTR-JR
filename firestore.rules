@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function linkedToCurrentUser(gameUid) {
+      return signedIn() && gameUid is string &&
+        exists(/databases/$(database)/documents/gameAccountLinks/$(gameUid)) &&
+        get(/databases/$(database)/documents/gameAccountLinks/$(gameUid)).data.authUid == request.auth.uid;
+    }
+
+    match /markets/{marketId} { allow read: if true; allow write: if false; }
+    match /synthetic_tokens/{symbol} { allow read: if true; allow write: if false; }
+    match /system_config/{settingId} { allow read: if true; allow write: if false; }
+    match /users/{authUid} { allow read: if signedIn() && request.auth.uid == authUid; allow write: if false; }
+    match /gameAccountLinks/{gameUid} {
+      allow read: if signedIn() && resource.data.authUid == request.auth.uid;
+      allow write: if false;
+    }
+    match /portfolios/{gameUid} { allow read: if linkedToCurrentUser(gameUid); allow write: if false; }
+    match /transfers/{transferId} {
+      allow read: if signedIn() &&
+        (linkedToCurrentUser(resource.data.sender_uid) || linkedToCurrentUser(resource.data.receiver_uid));
+      allow write: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
