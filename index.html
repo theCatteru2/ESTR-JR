@@ -182,7 +182,7 @@
 <body class="min-h-screen flex flex-col justify-between selection:bg-accent-cyan selection:text-obsidian-950">
 
     <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
 
     <!-- AUTHENTICATION MODAL -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/90 backdrop-blur-md">
@@ -380,7 +380,21 @@
 
             <!-- ================= TAB 1: VISIÓN GENERAL (DASHBOARD) ================= -->
             <section id="tab-dashboard" class="tab-content space-y-6">
-                <!-- Top Summary Cards -->
+                <!-- Saldos personales: prioridad en la vista inicial -->
+                <div class="grid grid-cols-2 gap-3 sm:gap-4" id="dash-personal-balances">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden border border-accent-cyan/30">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Mis Estrellas</div>
+                        <div class="text-lg sm:text-2xl font-black text-accent-cyan font-mono break-all" id="dash-user-estrellas">0.00</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Saldo disponible</div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden border border-accent-emerald/30">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Mis Dulucks</div>
+                        <div class="text-lg sm:text-2xl font-black text-accent-emerald font-mono break-all" id="dash-user-dulucks">0.00</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Saldo disponible</div>
+                    </div>
+                </div>
+
+                <!-- Indicadores globales del sistema -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="glass-card p-5 rounded-2xl relative overflow-hidden glass-card-hover">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Circulante ESTR Global</div>
@@ -1812,6 +1826,10 @@
             document.getElementById('header-user-uid').textContent = activeUID || 'usr_000';
             document.getElementById('header-user-estrellas').textContent = formatNumber(estrellas);
             document.getElementById('header-user-dulucks').textContent = formatNumber(dulucks);
+            const dashboardEstrellas = document.getElementById('dash-user-estrellas');
+            const dashboardDulucks = document.getElementById('dash-user-dulucks');
+            if (dashboardEstrellas) dashboardEstrellas.textContent = formatNumber(estrellas);
+            if (dashboardDulucks) dashboardDulucks.textContent = formatNumber(dulucks);
 
             const modBadge = document.getElementById('header-mod-badge');
             const adminNavBtn = document.getElementById('nav-btn-admin');
@@ -3704,7 +3722,11 @@
                 applySystemSettingsUI();
                 showToast('Configuración global actualizada.', 'success');
             } catch (err) {
-                showToast('Error al cambiar configuración.', 'error');
+                console.error('No se pudo actualizar system_config/app_settings:', err);
+                const detail = String(err?.code || err?.message || 'Error desconocido');
+                showToast(detail.toLowerCase().includes('permission_denied')
+                    ? 'Firebase rechazó el cambio: faltan permisos de escritura para system_config/app_settings.'
+                    : `No se pudo cambiar la configuración: ${detail}`, 'error');
             }
         }
 
